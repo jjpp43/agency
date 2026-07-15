@@ -203,6 +203,27 @@ function Particles({ reduced }: { reduced: boolean }) {
   );
 }
 
+/**
+ * Can this browser actually give us a context? WebGL can be switched off,
+ * blocklisted on old GPUs, or simply exhausted if a page holds too many
+ * contexts. Mounting <Canvas> anyway makes three throw where nothing catches
+ * it, which surfaces as an unhandled rejection and takes the hero with it.
+ * Probe first, and hand the context straight back.
+ */
+function canRenderWebGL() {
+  try {
+    const probe = document.createElement("canvas");
+    const gl =
+      probe.getContext("webgl2") ??
+      (probe.getContext("webgl") as WebGLRenderingContext | null);
+    if (!gl) return false;
+    gl.getExtension("WEBGL_lose_context")?.loseContext();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export default function HeroParticles() {
   const [ready, setReady] = useState(false);
   const [reduced, setReduced] = useState(false);
@@ -213,10 +234,13 @@ export default function HeroParticles() {
     setReduced(
       window.matchMedia("(prefers-reduced-motion: reduce)").matches,
     );
+    if (!canRenderWebGL()) return;
     const id = window.requestAnimationFrame(() => setReady(true));
     return () => window.cancelAnimationFrame(id);
   }, []);
 
+  // No context, no dot cloud. The hero is the headline; this fills the empty
+  // half on lg+, so dropping it costs the layout nothing.
   if (!ready) return null;
 
   return (
