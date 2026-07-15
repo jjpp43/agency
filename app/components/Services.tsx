@@ -8,11 +8,15 @@ import { Eyebrow } from "./ui/primitives";
 
 type Service = {
   tag: string;
-  title: string;
   /**
-   * Body copy. `^n` keys footnote n to the word it follows, so the marker has
-   * to sit on the noun that `notes[n - 1]` actually names — if you edit one,
-   * edit the other.
+   * The whole of the card's prose, opening sentence included. There is no
+   * separate title on purpose: the section header is the only headline here,
+   * and giving the card one too made it read as a second section header
+   * instead of as apparatus belonging to the selected row.
+   *
+   * `^n` keys footnote n to the word it follows, so the marker has to sit on
+   * the noun that `notes[n - 1]` actually names — if you edit one, edit the
+   * other.
    */
   body: string;
   notes: string[];
@@ -21,8 +25,7 @@ type Service = {
 const SERVICES: Service[] = [
   {
     tag: "Design",
-    title: "Web design with a point of view",
-    body: "We start from your brand, not a template. The art direction^1 is drawn for you: every layout, type choice, and interaction. Then it's built out in Figma^2 and handed over as a system^3 you can keep working in.",
+    body: "Web design with a point of view. We start from your brand, not a template. The art direction^1 is drawn for you: every layout, type choice, and interaction. Then it's built out in Figma^2 and handed over as a system^3 you can keep working in.",
     notes: [
       "Art direction & visual language",
       "High-fidelity design in Figma",
@@ -31,8 +34,7 @@ const SERVICES: Service[] = [
   },
   {
     tag: "Development",
-    title: "Engineered front to back",
-    body: "Production-grade front-ends^1 in Next.js and React: fast, accessible, and easy to edit. We wire them to a CMS^2 your team will actually use, and sweat the Core Web Vitals^3 so the site loads before anyone notices.",
+    body: "Engineered front to back. Production-grade front-ends^1 in Next.js and React: fast, accessible, and easy to edit. We wire them to a CMS^2 your team will actually use, and sweat the Core Web Vitals^3 so the site loads before anyone notices.",
     notes: [
       "Next.js / React front-ends",
       "Headless CMS integration",
@@ -41,8 +43,7 @@ const SERVICES: Service[] = [
   },
   {
     tag: "SEO & Performance",
-    title: "Fast sites that get found",
-    body: "A beautiful site is worth nothing if it loads slowly or never surfaces in search. We tune the technical foundations^1, chase down the Core Web Vitals^2, and wire up the reporting^3 so you can watch it work.",
+    body: "Fast sites that get found. A beautiful site is worth nothing if it loads slowly or never surfaces in search. We tune the technical foundations^1, chase down the Core Web Vitals^2, and wire up the reporting^3 so you can watch it work.",
     notes: [
       "Technical SEO & metadata",
       "Core Web Vitals tuning",
@@ -51,8 +52,7 @@ const SERVICES: Service[] = [
   },
   {
     tag: "Brand",
-    title: "A look that's unmistakably yours",
-    body: "Need the identity^1 too? We shape the logo, the palette and type^2, and the guidelines^3 that carry it all from the site into everything else you make.",
+    body: "A look that's unmistakably yours. Need the identity^1 too? We shape the logo, the palette and type^2, and the guidelines^3 that carry it all from the site into everything else you make.",
     notes: [
       "Logo & visual identity",
       "Color, type & brand systems",
@@ -151,13 +151,11 @@ export function Services() {
                   exit={{ opacity: 0, y: -16 }}
                   transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
                 >
-                  {/* No eyebrow: the selected row already names the service,
-                      and a label that only restates the selection is doing a
-                      job something else has done. */}
-                  <h3 className="font-display text-[34px] font-semibold leading-[1.02] tracking-[-0.03em] text-ink sm:text-[44px]">
-                    {current.title}
-                  </h3>
-                  <p className="mt-6 max-w-[46ch] text-[17px] leading-[1.6] text-ink-soft">
+                  {/* No headline and no eyebrow. The section header is the
+                      only headline in this section; the row on the left names
+                      the service. Anything more here just restates one of
+                      those and turns the card into a second header. */}
+                  <p className="max-w-[46ch] text-[20px] leading-[1.5] tracking-[-0.01em] text-ink-soft">
                     {annotate(current.body)}
                   </p>
                   {/* The footnote separator: a printer's short rule, set to a
