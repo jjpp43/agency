@@ -37,7 +37,7 @@ export function ServiceMark({
     // thing in words. Hovering a quarter is a mouse-only shortcut to it.
     <div
       aria-hidden
-      className="relative mx-auto aspect-square w-full max-w-[380px]"
+      className="relative mx-auto aspect-square w-full max-w-[260px]"
     >
       {/* inset leaves the corners the 45° turn needs, plus room to lift into */}
       <div className="absolute inset-[18%] grid rotate-45 grid-cols-2 gap-3">
