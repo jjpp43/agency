@@ -16,30 +16,24 @@ type Service = {
    * second section header rather than as detail for the selected row.
    */
   body: string;
-  /** What the service covers. Set on one line, so keep the terms short. */
-  covers: string[];
 };
 
 const SERVICES: Service[] = [
   {
     tag: "Design",
     body: "Web design with a point of view. We start from your brand, not a template, and draw every layout, type choice, and interaction for you.",
-    covers: ["Art direction", "Figma", "Design systems"],
   },
   {
     tag: "Development",
     body: "Engineered front to back. Production-grade front-ends in Next.js and React: fast, accessible, and easy to edit.",
-    covers: ["Next.js / React", "Headless CMS", "Performance"],
   },
   {
     tag: "SEO & Performance",
     body: "Fast sites that get found. A beautiful site is worth nothing if it loads slowly or never surfaces in search.",
-    covers: ["Technical SEO", "Core Web Vitals", "Analytics"],
   },
   {
     tag: "Brand",
     body: "A look that's unmistakably yours. We shape the logo, the palette, and the type that carry it from the site into everything else you make.",
-    covers: ["Identity", "Brand systems", "Guidelines"],
   },
 ];
 
@@ -126,16 +120,6 @@ export function Services() {
                 >
                   <p className="max-w-[46ch] text-[20px] leading-[1.5] tracking-[-0.01em] text-ink-soft">
                     {current.body}
-                  </p>
-                  {/* One line, not a list — it's the shortest way to keep the
-                      substance without turning the column back into copy. */}
-                  <p className="mt-6 font-mono text-[12px] uppercase tracking-[0.1em] text-faint">
-                    {current.covers.map((c, i) => (
-                      <span key={c}>
-                        {i > 0 && <span className="text-electric"> · </span>}
-                        {c}
-                      </span>
-                    ))}
                   </p>
                 </motion.article>
               </AnimatePresence>
