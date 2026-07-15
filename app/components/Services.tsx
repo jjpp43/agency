@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { Reveal } from "./gsap/Reveal";
 import { SplitReveal } from "./gsap/SplitReveal";
 import { Eyebrow } from "./ui/primitives";
-import { PageDiagram, type Note } from "./services/PageDiagram";
+import { ServiceMark } from "./services/ServiceMark";
 
 type Service = {
   tag: string;
@@ -20,12 +20,8 @@ type Service = {
    * other.
    */
   body: string;
-  /**
-   * Order matters: index + 1 is the marker used in the prose AND the region
-   * lit in the page diagram. Each note's region has to be a part of the page
-   * the note honestly names, otherwise the diagram is just decoration.
-   */
-  notes: Note[];
+  /** Order matters: index + 1 is the marker used in the prose. */
+  notes: string[];
 };
 
 const SERVICES: Service[] = [
@@ -33,39 +29,36 @@ const SERVICES: Service[] = [
     tag: "Design",
     body: "Web design with a point of view. We start from your brand, not a template. The art direction^1 is drawn for you: every layout, type choice, and interaction. Then it's built out in Figma^2 and handed over as a system^3 you can keep working in.",
     notes: [
-      { text: "Art direction & visual language", region: "hero" },
-      { text: "High-fidelity design in Figma", region: "media" },
-      { text: "Reusable design systems", region: "grid" },
+      "Art direction & visual language",
+      "High-fidelity design in Figma",
+      "Reusable design systems",
     ],
   },
   {
     tag: "Development",
     body: "Engineered front to back. Production-grade front-ends^1 in Next.js and React: fast, accessible, and easy to edit. We wire them to a CMS^2 your team will actually use, and sweat the Core Web Vitals^3 so the site loads before anyone notices.",
     notes: [
-      { text: "Next.js / React front-ends", region: "grid" },
-      { text: "Headless CMS integration", region: "lead" },
-      // Images are the honest home of both LCP and alt text.
-      { text: "Performance & accessibility", region: "media" },
+      "Next.js / React front-ends",
+      "Headless CMS integration",
+      "Performance & accessibility",
     ],
   },
   {
     tag: "SEO & Performance",
     body: "Fast sites that get found. A beautiful site is worth nothing if it loads slowly or never surfaces in search. We tune the technical foundations^1, chase down the Core Web Vitals^2, and wire up the reporting^3 so you can watch it work.",
     notes: [
-      // Metadata is the one thing that lives outside the page, so it's drawn
-      // outside it too — the snippet above the frame.
-      { text: "Technical SEO & metadata", region: "meta" },
-      { text: "Core Web Vitals tuning", region: "media" },
-      { text: "Analytics & search setup", region: "foot" },
+      "Technical SEO & metadata",
+      "Core Web Vitals tuning",
+      "Analytics & search setup",
     ],
   },
   {
     tag: "Brand",
     body: "A look that's unmistakably yours. Need the identity^1 too? We shape the logo, the palette and type^2, and the guidelines^3 that carry it all from the site into everything else you make.",
     notes: [
-      { text: "Logo & visual identity", region: "logo" },
-      { text: "Color, type & brand systems", region: "hero" },
-      { text: "Guidelines & asset kits", region: "grid" },
+      "Logo & visual identity",
+      "Color, type & brand systems",
+      "Guidelines & asset kits",
     ],
   },
 ];
@@ -114,7 +107,7 @@ export function Services() {
           </p>
         </Reveal>
         <Reveal className="lg:col-span-6 lg:self-end">
-          <PageDiagram notes={current.notes} />
+          <ServiceMark active={active} onHover={setActive} />
         </Reveal>
       </div>
 
@@ -182,13 +175,13 @@ export function Services() {
                   <ul className="mt-5 space-y-2.5">
                     {current.notes.map((n, i) => (
                       <li
-                        key={n.text}
+                        key={n}
                         className="flex items-baseline gap-3 text-[14px] leading-[1.5] text-muted"
                       >
                         <span className="shrink-0 font-mono text-[11px] text-electric">
                           [{i + 1}]
                         </span>
-                        <span>{n.text}</span>
+                        <span>{n}</span>
                       </li>
                     ))}
                   </ul>
