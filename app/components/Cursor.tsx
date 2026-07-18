@@ -9,6 +9,13 @@ import { gsap } from "gsap";
  * and flips from ink to paper over surfaces marked `data-cursor-dark` so it
  * stays visible on dark backgrounds. Disabled on touch / reduced motion.
  */
+// Flip lightness, keep hue. A bare invert() turns the electric accent yellow
+// (#2b2bf5 -> #d4d40a), which is nowhere in the palette; the 180deg hue
+// rotation puts the hue back where it started.
+const LENS = "invert(1) hue-rotate(180deg)";
+// Clear centre, inverted rim — see the mask note below.
+const LENS_MASK = "radial-gradient(closest-side, transparent 66%, #000 74%)";
+
 export function Cursor() {
   const dotRef = useRef<HTMLDivElement>(null);
   const ringRef = useRef<HTMLDivElement>(null);
@@ -100,11 +107,28 @@ export function Cursor() {
           borderColor: active ? "var(--color-electric)" : baseColor,
         }}
       >
-        {/* Outline only — the center stays open so the puck never occludes
-            what you're about to click. Label picks up the electric accent
-            since there's no fill behind it. */}
+        {/* Inverting lens. Still no fill — it flips what's underneath rather
+            than covering it, so the thing you're about to click stays legible
+            and the puck reads on bone and ink alike.
+            backdrop-filter, not mix-blend-mode: the wrapper's z-index makes a
+            stacking context, so a blended child would blend against the
+            wrapper's own transparent backdrop and do nothing. Kept mounted and
+            faded by opacity so it eases out as well as in. */}
         <span
-          className="font-mono text-[10px] uppercase tracking-wide text-electric transition-opacity duration-200"
+          className="absolute inset-0 rounded-full transition-opacity duration-300 ease-out"
+          style={{
+            opacity: active ? 1 : 0,
+            backdropFilter: LENS,
+            WebkitBackdropFilter: LENS,
+            // Donut: the middle stays untouched so the label and the thing
+            // you're about to click read normally — the invert is a rim.
+            maskImage: LENS_MASK,
+            WebkitMaskImage: LENS_MASK,
+          }}
+        />
+        {/* Label picks up the electric accent, painted over the lens. */}
+        <span
+          className="relative font-mono text-[10px] uppercase tracking-wide text-electric transition-opacity duration-200"
           style={{ opacity: active && label ? 1 : 0 }}
         >
           {label}
