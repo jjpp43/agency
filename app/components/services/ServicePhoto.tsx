@@ -49,6 +49,7 @@ export function ServicePhoto({
     // hairline stays under the photo too: these frames run high-key, and
     // without an edge they dissolve into the bone page
     <figure
+      data-photo
       className={`relative overflow-hidden border border-line bg-bone ${className}`}
     >
       {!errored && (

@@ -199,6 +199,8 @@ export function Services() {
 
             steps.forEach((el, i) => {
               const body = el.querySelector("[data-body]");
+              const photo = el.querySelector("[data-photo]");
+              const shot = el.querySelector("[data-photo] img, [data-photo] div");
               // step 01 opens immediately at pin-start, so there's no empty beat
               const at = i * 1.05;
               // the cover swings open on its left edge and settles (power3.out)
@@ -213,6 +215,26 @@ export function Services() {
                 },
                 at,
               )
+                // the photo wipes open left-to-right, the same direction the
+                // cover swings and the stair line draws
+                .fromTo(
+                  photo,
+                  { clipPath: "inset(0% 100% 0% 0%)" },
+                  {
+                    clipPath: "inset(0% 0% 0% 0%)",
+                    duration: 0.65,
+                    ease: "power3.inOut",
+                  },
+                  at + 0.28,
+                )
+                // and the image settles back as the wipe passes over it, so the
+                // frame isn't just uncovering something already at rest
+                .fromTo(
+                  shot,
+                  { scale: 1.18 },
+                  { scale: 1, duration: 0.95, ease: "power3.out" },
+                  at + 0.28,
+                )
                 // one-two: the body copy rises in just after the word lands
                 .fromTo(
                   body,
