@@ -69,8 +69,6 @@
   --radius-lg: 12px;
   --radius-pill: 9999px;
 
-  --animate-marquee: marquee 32s linear infinite;
-  --animate-marquee-rev: marquee-rev 32s linear infinite;
 }
 
 @layer base {
@@ -117,10 +115,13 @@
   color: var(--color-electric);
 }
 
-/* Outlined (stroke-only) display text */
+/* Outlined (stroke-only) display text. Strokes in `currentColor`, so it works
+   on dark surfaces too — set a text colour alongside it. Hides the fill with
+   text-fill-color rather than `color: transparent`, which would make
+   currentColor transparent and take the stroke with it. */
 @utility text-outline {
-  color: transparent;
-  -webkit-text-stroke: 1.5px var(--color-ink);
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 1.5px currentColor;
 }
 
 /* Blueprint grid on paper */
@@ -134,15 +135,6 @@
 @utility bg-dots {
   background-image: radial-gradient(circle, rgba(20, 19, 16, 0.16) 1.2px, transparent 1.2px);
   background-size: 20px 20px;
-}
-
-@keyframes marquee {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
-}
-@keyframes marquee-rev {
-  from { transform: translateX(-50%); }
-  to { transform: translateX(0); }
 }
 
 /* Split-text guard before GSAP runs */
