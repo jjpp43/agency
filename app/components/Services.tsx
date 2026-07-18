@@ -77,9 +77,11 @@ const SHOTS: Shot[] = [
 // The descending-right staircase (desktop). Each step sits lower and further
 // right than the last, so the section reads left-to-right as it accumulates.
 // Room is left up top for the persistent header.
+// Equal widths, so the three cover-opens sweep the same arc on their left
+// hinge. 42% is what the last step can take without passing the right margin.
 const POS = [
-  "left-[4%] top-[25%] w-[46%]",
-  "left-[31%] top-[48%] w-[44%]",
+  "left-[4%] top-[25%] w-[42%]",
+  "left-[31%] top-[48%] w-[42%]",
   "left-[54%] top-[69%] w-[42%]",
 ];
 
