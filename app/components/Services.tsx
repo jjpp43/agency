@@ -14,6 +14,7 @@ import {
   measureSwitchback,
   type StairMetrics,
 } from "./services/StairLine";
+import { ServicePhoto, type Shot } from "./services/ServicePhoto";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -50,6 +51,26 @@ const STEPS: Step[] = [
         <span className="font-mono">(SEO&nbsp;&amp;&nbsp;AEO)</span>.
       </>
     ),
+  },
+];
+
+// One photo per step. Drop a real file at `src` and it replaces the
+// placeholder on the next load — nothing here needs to change.
+const SHOTS: Shot[] = [
+  {
+    src: "/services/listen.jpg",
+    subject: "A call in progress · notes · whiteboard",
+    alt: "Working through a new project's goals",
+  },
+  {
+    src: "/services/build.jpg",
+    subject: "Screens mid-work · design file · code",
+    alt: "Design and build in progress",
+  },
+  {
+    src: "/services/grow.jpg",
+    subject: "Analytics · a launch · dashboard",
+    alt: "Measuring a launched site's performance",
   },
 ];
 
@@ -112,7 +133,16 @@ export function Services() {
           };
           layout();
 
+          // Desktop photo slot: one frame in the empty lower-left, crossfading
+          // through the three shots as the staircase accumulates.
+          const shots = gsap.utils.toArray<HTMLElement>("[data-shot]", host);
+
           if (!motion) {
+            // Static: hold the first shot, since every step is shown at rest.
+            if (shots.length) {
+              gsap.set(shots, { autoAlpha: 0 });
+              gsap.set(shots[0], { autoAlpha: 1 });
+            }
             const ro = new ResizeObserver(layout);
             ro.observe(host);
             return () => ro.disconnect();
@@ -173,6 +203,22 @@ export function Services() {
                   },
                   at,
                 );
+
+              // and the photo slot crossfades to this step's shot
+              if (shots[i]) {
+                tl.to(
+                  shots[i],
+                  { autoAlpha: 1, duration: 0.5, ease: "power2.out" },
+                  at + 0.15,
+                );
+                if (shots[i - 1]) {
+                  tl.to(
+                    shots[i - 1],
+                    { autoAlpha: 0, duration: 0.5, ease: "power2.out" },
+                    at + 0.15,
+                  );
+                }
+              }
             });
 
             tl.to({}, { duration: 0.6 }); // tail — hold the finished staircase
@@ -220,6 +266,22 @@ export function Services() {
             <h2 className="mt-4 max-w-[18ch] text-balance font-display text-[clamp(22px,2.5vw,34px)] font-semibold leading-[1.05] tracking-[-0.02em] text-ink">
               Three moves, one small team.
             </h2>
+          </div>
+
+          {/* Photo slot — sits in the space the staircase leaves empty as it
+              descends to the right, clear of the stair line's first drop. */}
+          <div className="absolute left-[4%] top-[48%] aspect-[4/5] w-[22%]">
+            {SHOTS.map((shot, i) => (
+              <div
+                key={shot.src}
+                data-shot
+                className="absolute inset-0"
+                // first shot is the at-rest state; JS drives the rest
+                style={{ opacity: i === 0 ? 1 : 0 }}
+              >
+                <ServicePhoto shot={shot} className="h-full w-full" />
+              </div>
+            ))}
           </div>
 
           {STEPS.map((s, i) => (
@@ -274,6 +336,10 @@ export function Services() {
                 <p className="mt-3 max-w-[32ch] text-pretty text-[16px] leading-[1.45] text-ink-soft">
                   {s.body}
                 </p>
+                <ServicePhoto
+                  shot={SHOTS[i]}
+                  className="mt-5 aspect-[4/5] w-[62%] max-w-[260px]"
+                />
               </Reveal>
             ))}
           </div>
