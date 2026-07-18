@@ -66,14 +66,17 @@ const SHOTS: Shot[] = [
     position: "center 64%",
   },
   {
-    src: "/service2.png",
+    src: "/service2.jpg",
     subject: "Screens mid-work · design file · code",
     alt: "A developer working through code at a desk",
+    // The only colour frame of the three, and its yellow was pulling harder
+    // than the electric accent. Desaturated to match the other two.
+    grade: "grayscale(1)",
   },
   {
-    src: "/services/grow.jpg",
+    src: "/service3.jpg",
     subject: "Analytics · a launch · dashboard",
-    alt: "Measuring a launched site's performance",
+    alt: "Analytics on screen beside a printed brand sheet",
   },
 ];
 
