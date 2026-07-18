@@ -66,9 +66,9 @@ const SHOTS: Shot[] = [
     position: "center 64%",
   },
   {
-    src: "/services/build.jpg",
+    src: "/service2.png",
     subject: "Screens mid-work · design file · code",
-    alt: "Design and build in progress",
+    alt: "A developer working through code at a desk",
   },
   {
     src: "/services/grow.jpg",
