@@ -62,7 +62,9 @@ accent, oversized grotesque type, custom cursor, GSAP motion throughout.
 - **Custom cursor:** the native cursor is hidden on fine pointers. Mark dark
   surfaces with `data-cursor-dark` so the cursor flips to a light color; use
   `data-cursor="Label"` to set a hover label. Over links/buttons the ring
-  swells to a **hollow electric outline** (no fill — it never occludes content).
+  swells to an **electric outline whose disc inverts the page beneath it**
+  (`backdrop-filter`, not `mix-blend-mode` — the cursor's own z-index makes a
+  stacking context that would neuter a blend).
 - **three / R3F caveat:** importing `@react-three/fiber` globally augments
   `React.JSX.IntrinsicElements`, which collapses the `children` of the
   polymorphic `as`/`ElementType` helpers (`Reveal`, `SplitReveal`, `Scramble`)

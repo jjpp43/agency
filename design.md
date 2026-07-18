@@ -99,10 +99,13 @@ Radii are intentionally **sharp**: `sm 3 · md 6 · lg 12 · pill 9999`. Cards u
   wordmark building, then panels wipe up. Runs once per session; broadcasts
   `fn:intro-done` (the hero waits on it). Skipped under reduced motion.
 - **`Cursor`** — bespoke cursor: ink dot + lagging ring. Over `[data-cursor="…"]`
-  / links / buttons the ring swells to a **hollow electric outline** with the
-  label inside — outline-only so it never covers what you're about to click.
-  Flips to `paper` over `[data-cursor-dark]` surfaces. Off on touch + reduced
-  motion (native cursor hidden on fine pointers via `globals.css`).
+  / links / buttons the ring swells to an **electric outline** with the label
+  inside, and the disc **inverts the page beneath it** (`backdrop-filter:
+  invert(1) hue-rotate(180deg)` — the hue rotation keeps electric from turning
+  yellow). It reverses what's under the cursor rather than covering it, and
+  reads on bone and ink alike. Flips to `paper` over `[data-cursor-dark]`
+  surfaces. Off on touch + reduced motion (native cursor hidden on fine
+  pointers via `globals.css`).
 - **`SmoothScroll`** — Lenis, synced to GSAP ScrollTrigger; smooth anchor jumps.
 - **`booking/`** — `BookingModalProvider` (context + scroll lock),
   `BookingButton` (the "Start a project" trigger; `magnetic` is an opt-in prop,

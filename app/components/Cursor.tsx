@@ -13,9 +13,6 @@ import { gsap } from "gsap";
 // (#2b2bf5 -> #d4d40a), which is nowhere in the palette; the 180deg hue
 // rotation puts the hue back where it started.
 const LENS = "invert(1) hue-rotate(180deg)";
-// Clear centre, inverted rim — see the mask note below.
-const LENS_MASK = "radial-gradient(closest-side, transparent 66%, #000 74%)";
-
 export function Cursor() {
   const dotRef = useRef<HTMLDivElement>(null);
   const ringRef = useRef<HTMLDivElement>(null);
@@ -107,9 +104,10 @@ export function Cursor() {
           borderColor: active ? "var(--color-electric)" : baseColor,
         }}
       >
-        {/* Inverting lens. Still no fill — it flips what's underneath rather
-            than covering it, so the thing you're about to click stays legible
-            and the puck reads on bone and ink alike.
+        {/* Inverting lens filling the whole puck. It flips what's underneath
+            rather than painting over it, so the thing you're about to click is
+            still there — just reversed — and the cursor reads on bone and ink
+            alike.
             backdrop-filter, not mix-blend-mode: the wrapper's z-index makes a
             stacking context, so a blended child would blend against the
             wrapper's own transparent backdrop and do nothing. Kept mounted and
@@ -120,10 +118,6 @@ export function Cursor() {
             opacity: active ? 1 : 0,
             backdropFilter: LENS,
             WebkitBackdropFilter: LENS,
-            // Donut: the middle stays untouched so the label and the thing
-            // you're about to click read normally — the invert is a rim.
-            maskImage: LENS_MASK,
-            WebkitMaskImage: LENS_MASK,
           }}
         />
         {/* Label picks up the electric accent, painted over the lens. */}
