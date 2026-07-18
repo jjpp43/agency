@@ -97,8 +97,14 @@ export function buildLaptop(count: number, out = new Float32Array(count * 3)) {
   return out;
 }
 
-/** Morph loop timing (seconds): assemble → hold → disperse → hold. */
-export const MORPH = 3.0;
+/**
+ * Morph loop timing (seconds): assemble → hold → disperse → hold.
+ * MORPH is the knob for how briskly the cloud snaps together; the cubic ease
+ * dwells at each shape, so the transit through the scatter is faster than the
+ * number alone suggests. Both renderers read this, so the WebGL and 2D clouds
+ * stay in step.
+ */
+export const MORPH = 1.7;
 export const HOLD = 1.5;
 export const LOOP = MORPH * 2 + HOLD * 2;
 
