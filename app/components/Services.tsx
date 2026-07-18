@@ -1,129 +1,281 @@
 "use client";
 
-import { useState } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import type { ReactNode } from "react";
+import { useRef } from "react";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useGSAP } from "@gsap/react";
 import { Reveal } from "./gsap/Reveal";
-import { SplitReveal } from "./gsap/SplitReveal";
 import { Eyebrow } from "./ui/primitives";
-import { ServiceMark } from "./services/ServiceMark";
+import {
+  StairLine,
+  applyDraw,
+  measureStair,
+  measureSwitchback,
+  type StairMetrics,
+} from "./services/StairLine";
 
-type Service = {
-  tag: string;
-  /**
-   * The whole of the card's prose, opening sentence included. Two sentences,
-   * and keep it there. There is no headline on purpose: the section header is
-   * the only headline here, and giving the card one too made it read as a
-   * second section header rather than as detail for the selected row.
-   */
-  body: string;
-};
+gsap.registerPlugin(ScrollTrigger, useGSAP);
 
-const SERVICES: Service[] = [
+type Step = { num: string; word: string; body: ReactNode };
+
+const STEPS: Step[] = [
   {
-    tag: "Design",
-    body: "Web design with a point of view. We start from your brand, not a template, and draw every layout, type choice, and interaction for you.",
+    num: "01",
+    word: "Listen",
+    body: (
+      <>
+        We start by understanding your goals, your audience, and what sets you
+        apart.
+      </>
+    ),
   },
   {
-    tag: "Development",
-    body: "Engineered front to back. Production-grade front-ends in Next.js and React: fast, accessible, and easy to edit.",
+    num: "02",
+    word: "Build",
+    body: (
+      <>
+        Then we make it — brand, design, and development, end to end, one small
+        team.
+      </>
+    ),
   },
   {
-    tag: "SEO & Performance",
-    body: "Fast sites that get found. A beautiful site is worth nothing if it loads slowly or never surfaces in search.",
-  },
-  {
-    tag: "Brand",
-    body: "A look that's unmistakably yours. We shape the logo, the palette, and the type that carry it from the site into everything else you make.",
+    num: "03",
+    word: "Grow",
+    body: (
+      <>
+        And we get you found: tuned for search engines and the{" "}
+        <span className="text-electric">AI answer engines</span> people now ask{" "}
+        <span className="font-mono">(SEO&nbsp;&amp;&nbsp;AEO)</span>.
+      </>
+    ),
   },
 ];
 
+// The descending-right staircase (desktop). Each step sits lower and further
+// right than the last, so the section reads left-to-right as it accumulates.
+// Room is left up top for the persistent header.
+const POS = [
+  "left-[4%] top-[25%] w-[46%]",
+  "left-[31%] top-[48%] w-[44%]",
+  "left-[54%] top-[69%] w-[42%]",
+];
+
 export function Services() {
-  const [active, setActive] = useState(0);
-  const current = SERVICES[active];
+  const ref = useRef<HTMLElement>(null);
+  const pinRef = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const mobRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia();
+      // One handler for every combination: `lg`/`sm` pick the visible stair
+      // line and how it's driven; without `motion` the line paints fully drawn
+      // and only re-measures on resize (the static, reduced-motion contract).
+      mm.add(
+        {
+          lg: "(min-width: 1024px)",
+          sm: "(max-width: 1023px)",
+          motion: "(prefers-reduced-motion: no-preference)",
+        },
+        (ctx) => {
+          const { lg, motion } = ctx.conditions as {
+            lg: boolean;
+            motion: boolean;
+          };
+
+          const host = lg ? stageRef.current : mobRef.current;
+          if (!host) return;
+          const path = host.querySelector<SVGPathElement>("[data-stair-path]");
+          const dot = host.querySelector<SVGCircleElement>("[data-stair-dot]");
+          const steps = lg
+            ? gsap.utils.toArray<HTMLElement>("[data-step]", host)
+            : Array.from(host.children).filter(
+                (el): el is HTMLElement => el.tagName === "DIV",
+              );
+
+          // The line's draw state lives outside the tweens so a re-measure
+          // (resize / font swap → refresh) keeps the current progress.
+          const line = { len: 0 };
+          let m: StairMetrics | null = null;
+          const layout = () => {
+            if (!path || !dot) return;
+            m = lg ? measureStair(host, steps) : measureSwitchback(host, steps);
+            if (!m) return;
+            path.setAttribute("d", m.d);
+            applyDraw(path, dot, m, motion ? line.len : m.total);
+          };
+          const draw = () => {
+            if (m && path && dot) applyDraw(path, dot, m, line.len);
+          };
+          layout();
+
+          if (!motion) {
+            const ro = new ResizeObserver(layout);
+            ro.observe(host);
+            return () => ro.disconnect();
+          }
+
+          if (lg) {
+            // Pin the stage and, as the pinned region scrolls, cover-open each
+            // step (rotateY on a left hinge) into place, accumulating the
+            // staircase — while the stair line draws its next reach in the
+            // same window. The header is NOT animated — it stays put the whole
+            // pin, so the screen is never empty.
+            const tl = gsap.timeline({
+              scrollTrigger: {
+                trigger: pinRef.current,
+                start: "top top",
+                end: "+=300%",
+                pin: true,
+                scrub: 0.6,
+                invalidateOnRefresh: true,
+                // measure after refresh (not refreshInit): mid-refresh the pin
+                // still carries the old viewport's inline size, so the step
+                // offsets read stale
+                onRefresh: layout,
+              },
+            });
+
+            steps.forEach((el, i) => {
+              const body = el.querySelector("[data-body]");
+              // step 01 opens immediately at pin-start, so there's no empty beat
+              const at = i * 1.05;
+              // the cover swings open on its left edge and settles (power3.out)
+              tl.fromTo(
+                el,
+                { rotateY: -78, autoAlpha: 0 },
+                {
+                  rotateY: 0,
+                  autoAlpha: 1,
+                  duration: 0.75,
+                  ease: "power3.out",
+                },
+                at,
+              )
+                // one-two: the body copy rises in just after the word lands
+                .fromTo(
+                  body,
+                  { autoAlpha: 0, y: 14 },
+                  { autoAlpha: 1, y: 0, duration: 0.4, ease: "power2.out" },
+                  at + 0.5,
+                )
+                // the line drops down and treads under the step it just reached
+                .to(
+                  line,
+                  {
+                    len: () => m?.marks[i] ?? 0,
+                    duration: 0.9,
+                    ease: "power2.out",
+                    onUpdate: draw,
+                  },
+                  at,
+                );
+            });
+
+            tl.to({}, { duration: 0.6 }); // tail — hold the finished staircase
+          } else {
+            // Mobile: the switchback scrubs in alongside the stacked Reveals.
+            gsap.to(line, {
+              len: () => m?.total ?? 0,
+              ease: "none",
+              scrollTrigger: {
+                trigger: host,
+                start: "top 78%",
+                end: "bottom 72%",
+                scrub: true,
+                invalidateOnRefresh: true,
+                onRefresh: layout,
+              },
+              onUpdate: draw,
+            });
+          }
+        },
+      );
+    },
+    { scope: ref },
+  );
 
   return (
-    <section
-      id="services"
-      className="relative overflow-hidden bg-bone py-24 sm:py-32"
-    >
-      <div className="relative mx-auto w-full max-w-[1320px] px-6">
-        {/* Header row. The mark fills what was dead space to the right of the
-            copy, and sits above the detail so both share a column. */}
-        <div className="grid gap-12 lg:grid-cols-12 lg:gap-16">
-          <Reveal className="lg:col-span-6">
-            <Eyebrow index="01">Services</Eyebrow>
-            <SplitReveal
-              as="h2"
-              className="mt-6 font-display text-[40px] font-semibold leading-[0.98] tracking-[-0.03em] text-ink sm:text-[56px]"
-            >
-              Everything your website needs, under one roof.
-            </SplitReveal>
-            <p className="mt-6 max-w-xl text-[18px] leading-[1.5] text-muted">
-              Design, development, SEO, and brand, all handled by one small
-              team. Take the whole project or just the part you&apos;re missing.
-            </p>
-          </Reveal>
-          <Reveal className="lg:col-span-6 lg:self-end">
-            <ServiceMark active={active} onHover={setActive} />
-          </Reveal>
-        </div>
+    <section id="services" ref={ref} className="bg-bone">
+      {/* Desktop: pinned cover-open staircase with a persistent header */}
+      <div
+        ref={pinRef}
+        className="relative hidden h-screen overflow-hidden lg:block"
+      >
+        <div
+          ref={stageRef}
+          className="relative mx-auto h-full max-w-[1320px] px-6"
+          style={{ perspective: "1700px", perspectiveOrigin: "40% 45%" }}
+        >
+          {/* The stair line — draws in under the steps on the pin's clock */}
+          <StairLine className="pointer-events-none absolute inset-0 h-full w-full" />
 
-        <div className="mt-16 grid gap-12 lg:grid-cols-12 lg:gap-16">
-          {/* Selector */}
-          <div className="lg:col-span-6">
-            <ul className="border-t border-line">
-              {SERVICES.map((s, i) => {
-                const isActive = active === i;
-                return (
-                  <li key={s.tag} className="border-b border-line">
-                    <button
-                      type="button"
-                      onClick={() => setActive(i)}
-                      onMouseEnter={() => setActive(i)}
-                      onFocus={() => setActive(i)}
-                      aria-pressed={isActive}
-                      className="group flex w-full items-center gap-5 py-6 text-left"
-                    >
-                      <span
-                        className={`font-mono text-[13px] transition-colors duration-300 ${
-                          isActive ? "text-electric" : "text-faint"
-                        }`}
-                      >
-                        {String(i + 1).padStart(2, "0")}
-                      </span>
-                      <span
-                        className={`font-display text-[30px] font-medium leading-none tracking-[-0.02em] transition-all duration-300 sm:text-[40px] ${
-                          isActive
-                            ? "translate-x-2 text-ink"
-                            : "text-faint group-hover:translate-x-1 group-hover:text-ink-soft"
-                        }`}
-                      >
-                        {s.tag}
-                      </span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
+          {/* Persistent header — stays on screen the whole pin, so the section
+              never goes empty between the intro and the first step. */}
+          <div className="absolute left-[4%] top-[9%] z-10">
+            <Eyebrow index="01">Services</Eyebrow>
+            <h2 className="mt-4 max-w-[18ch] text-balance font-display text-[clamp(22px,2.5vw,34px)] font-semibold leading-[1.05] tracking-[-0.02em] text-ink">
+              Three moves, one small team.
+            </h2>
           </div>
 
-          {/* Detail */}
-          <div className="lg:col-span-6">
-            <div className="lg:sticky lg:top-28">
-              <AnimatePresence mode="wait">
-                <motion.article
-                  key={current.tag}
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -16 }}
-                  transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-                >
-                  <p className="max-w-[46ch] text-[20px] leading-[1.5] tracking-[-0.01em] text-ink-soft">
-                    {current.body}
-                  </p>
-                </motion.article>
-              </AnimatePresence>
-            </div>
+          {STEPS.map((s, i) => (
+            <article
+              key={s.word}
+              data-step
+              className={`absolute origin-left ${POS[i]}`}
+            >
+              <div className="flex items-baseline gap-4">
+                <span className="font-mono text-[14px] text-electric">
+                  {s.num}
+                </span>
+                <h3 className="font-display text-[clamp(44px,6.6vw,98px)] font-semibold leading-[0.9] tracking-[-0.035em] text-ink">
+                  {s.word}
+                </h3>
+              </div>
+              <p
+                data-body
+                className="mt-3.5 max-w-[34ch] text-pretty text-[clamp(15px,1.35vw,18px)] leading-[1.45] text-ink-soft"
+              >
+                {s.body}
+              </p>
+            </article>
+          ))}
+        </div>
+      </div>
+
+      {/* Mobile / reduced motion: stacked, each step step-indented right */}
+      <div className="lg:hidden">
+        <div className="mx-auto max-w-[1320px] px-6 pb-24 pt-24">
+          <Eyebrow index="01">Services</Eyebrow>
+          <h2 className="mt-6 max-w-[16ch] text-balance font-display text-[40px] font-semibold leading-[0.98] tracking-[-0.03em] text-ink sm:text-[56px]">
+            Three moves, one small team.
+          </h2>
+
+          <div ref={mobRef} className="relative mt-14 flex flex-col gap-14">
+            {/* The switchback line — scrubs in behind the stacked steps */}
+            <StairLine className="pointer-events-none absolute inset-0 h-full w-full" />
+            {STEPS.map((s, i) => (
+              <Reveal
+                key={s.word}
+                className={["ml-0", "ml-[8%]", "ml-[16%]"][i]}
+              >
+                <div className="flex items-baseline gap-3">
+                  <span className="font-mono text-[13px] text-electric">
+                    {s.num}
+                  </span>
+                  <h3 className="font-display text-[52px] font-semibold leading-[0.9] tracking-[-0.03em] text-ink">
+                    {s.word}
+                  </h3>
+                </div>
+                <p className="mt-3 max-w-[32ch] text-pretty text-[16px] leading-[1.45] text-ink-soft">
+                  {s.body}
+                </p>
+              </Reveal>
+            ))}
           </div>
         </div>
       </div>
