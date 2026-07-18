@@ -80,12 +80,15 @@ const SHOTS: Shot[] = [
 // The descending-right staircase (desktop). Each step sits lower and further
 // right than the last, so the section reads left-to-right as it accumulates.
 // Room is left up top for the persistent header.
-// Equal widths, so the three cover-opens sweep the same arc on their left
-// hinge. 42% is what the last step can take without passing the right margin.
+// Each step is a photo-and-text pair that descends together, so the image is
+// always beside the word it belongs to rather than parked in a corner while the
+// titles walk away from it. Equal widths keep the three cover-opens sweeping
+// the same arc on their left hinge; the rows are spaced so they never overlap
+// vertically, since they do overlap horizontally.
 const POS = [
-  "left-[4%] top-[25%] w-[42%]",
-  "left-[31%] top-[48%] w-[42%]",
-  "left-[54%] top-[69%] w-[42%]",
+  "left-[4%] top-[24%] w-[42%]",
+  "left-[22%] top-[48.5%] w-[42%]",
+  "left-[40%] top-[73%] w-[42%]",
 ];
 
 export function Services() {
@@ -138,20 +141,18 @@ export function Services() {
           };
           layout();
 
-          // Two stacks that swap with the steps: the photo slot in the empty
-          // lower-left, and the outsized step numeral in the empty top-right.
-          const shots = gsap.utils.toArray<HTMLElement>("[data-shot]", host);
+          // The photos ride along inside their steps now; only the outsized
+          // numeral in the top-right still swaps.
           const numerals = gsap.utils.toArray<HTMLElement>(
             "[data-numeral]",
             host,
           );
 
           if (!motion) {
-            // Static: hold the first of each, since every step shows at rest.
-            for (const els of [shots, numerals]) {
-              if (!els.length) continue;
-              gsap.set(els, { autoAlpha: 0 });
-              gsap.set(els[0], { autoAlpha: 1 });
+            // Static: hold the first numeral, since every step shows at rest.
+            if (numerals.length) {
+              gsap.set(numerals, { autoAlpha: 0 });
+              gsap.set(numerals[0], { autoAlpha: 1 });
             }
             const ro = new ResizeObserver(layout);
             ro.observe(host);
@@ -231,9 +232,8 @@ export function Services() {
                   at,
                 );
 
-              // the numeral turns over with the step, the photo just behind it
+              // the numeral turns over with the step
               swapTo(numerals, i, at);
-              swapTo(shots, i, at + 0.15);
             });
 
             tl.to({}, { duration: 0.6 }); // tail — hold the finished staircase
@@ -308,42 +308,33 @@ export function Services() {
             ))}
           </div>
 
-          {/* Photo slot — sits in the space the staircase leaves empty as it
-              descends to the right, clear of the stair line's first drop. */}
-          <div className="absolute left-[4%] top-[48%] aspect-[4/5] w-[22%]">
-            {SHOTS.map((shot, i) => (
-              <div
-                key={shot.src}
-                data-shot
-                className="absolute inset-0"
-                // first shot is the at-rest state; JS drives the rest
-                style={{ opacity: i === 0 ? 1 : 0 }}
-              >
-                <ServicePhoto shot={shot} className="h-full w-full" />
-              </div>
-            ))}
-          </div>
-
           {STEPS.map((s, i) => (
             <article
               key={s.word}
               data-step
-              className={`absolute origin-left ${POS[i]}`}
+              className={`absolute flex origin-left items-center gap-5 ${POS[i]}`}
             >
-              <div className="flex items-baseline gap-4">
-                <span className="font-mono text-[14px] text-electric">
-                  {s.num}
-                </span>
-                <h3 className="font-display text-[clamp(44px,6.6vw,98px)] font-semibold leading-[0.9] tracking-[-0.035em] text-ink">
-                  {s.word}
-                </h3>
+              {/* the step's own photo, travelling with it */}
+              <ServicePhoto
+                shot={SHOTS[i]}
+                className="aspect-[4/5] w-[27%] shrink-0"
+              />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-baseline gap-4">
+                  <span className="font-mono text-[14px] text-electric">
+                    {s.num}
+                  </span>
+                  <h3 className="font-display text-[clamp(38px,5.4vw,82px)] font-semibold leading-[0.9] tracking-[-0.035em] text-ink">
+                    {s.word}
+                  </h3>
+                </div>
+                <p
+                  data-body
+                  className="mt-3 text-pretty text-[clamp(14px,1.2vw,17px)] leading-[1.45] text-ink-soft"
+                >
+                  {s.body}
+                </p>
               </div>
-              <p
-                data-body
-                className="mt-3.5 max-w-[34ch] text-pretty text-[clamp(15px,1.35vw,18px)] leading-[1.45] text-ink-soft"
-              >
-                {s.body}
-              </p>
             </article>
           ))}
         </div>
