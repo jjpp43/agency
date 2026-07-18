@@ -88,16 +88,22 @@ const SHOTS: Shot[] = [
 // titles walk away from it. Equal widths keep the three cover-opens sweeping
 // the same arc on their left hinge; the rows are spaced so they never overlap
 // vertically, since they do overlap horizontally.
+// The vertical offsets carry a pixel floor as well as a percentage. On a tall
+// viewport the percentage wins and nothing changes; on a short one the floors
+// hold the rows apart from the header and from each other, whose type doesn't
+// shrink with the viewport. `fit()` then scales the whole stage to whatever
+// height is left, so the composition never collides and never overflows.
 const POS = [
-  "left-[4%] top-[24%] w-[42%]",
-  "left-[22%] top-[48.5%] w-[42%]",
-  "left-[40%] top-[73%] w-[42%]",
+  "left-[4%] top-[max(200px,24%)] w-[42%]",
+  "left-[22%] top-[max(415px,48.5%)] w-[42%]",
+  "left-[40%] top-[max(630px,73%)] w-[42%]",
 ];
 
 export function Services() {
   const ref = useRef<HTMLElement>(null);
   const pinRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
+  const fitRef = useRef<HTMLDivElement>(null);
   const mobRef = useRef<HTMLDivElement>(null);
 
   useGSAP(
@@ -142,7 +148,34 @@ export function Services() {
           const draw = () => {
             if (m && path && dot) applyDraw(path, dot, m, line.len);
           };
+
+          /**
+           * Shrink the stage to whatever height the viewport actually has.
+           * Measured from layout (offsetTop/offsetHeight ignore transforms, so
+           * this stays correct when a scale is already applied) rather than
+           * from a breakpoint guess. TAIL covers the stair line's last tread
+           * plus a little air beneath it.
+           */
+          const TAIL = 48;
+          const fit = () => {
+            const wrap = fitRef.current;
+            if (!wrap || !lg) return;
+            const last = steps[steps.length - 1];
+            const available = host.clientHeight;
+            if (!last || !available) return;
+            const needed = last.offsetTop + last.offsetHeight + TAIL;
+            const s = Math.min(1, available / needed);
+            gsap.set(wrap, { scale: s, transformOrigin: "top center" });
+
+            // The numeral's 84px floor keeps it below the fixed nav, but it's
+            // inside the scaled wrapper — so the floor has to be divided by the
+            // scale to survive as 84px on screen.
+            const box = host.querySelector<HTMLElement>("[data-numeral-box]");
+            if (box) box.style.top = `${Math.max(84 / s, available * 0.08)}px`;
+          };
+
           layout();
+          fit();
 
           // The photos ride along inside their steps now; only the outsized
           // numeral in the top-right still swaps.
@@ -157,7 +190,7 @@ export function Services() {
               gsap.set(numerals, { autoAlpha: 0 });
               gsap.set(numerals[0], { autoAlpha: 1 });
             }
-            const ro = new ResizeObserver(layout);
+            const ro = new ResizeObserver(() => { layout(); fit(); });
             ro.observe(host);
             return () => ro.disconnect();
           }
@@ -179,7 +212,7 @@ export function Services() {
                 // measure after refresh (not refreshInit): mid-refresh the pin
                 // still carries the old viewport's inline size, so the step
                 // offsets read stale
-                onRefresh: layout,
+                onRefresh: () => { layout(); fit(); },
               },
             });
 
@@ -296,8 +329,16 @@ export function Services() {
           className="relative mx-auto h-full max-w-[1320px] px-6"
           style={{ perspective: "1700px", perspectiveOrigin: "40% 45%" }}
         >
-          {/* The stair line — draws in under the steps on the pin's clock */}
-          <StairLine className="pointer-events-none absolute inset-0 h-full w-full" />
+          {/* Everything in the stage scales together to fit the viewport's
+              height. The rows are positioned as a share of that height but
+              sized from their photo and type, which don't shrink with it — so
+              on a short laptop (Firefox at HiDPI scaling especially) the last
+              step and the stair line's final tread ran off the bottom. Scaling
+              the whole composition keeps the layout identical and only ever
+              makes it smaller when the height genuinely isn't there. */}
+          <div ref={fitRef} className="absolute inset-0">
+            {/* The stair line — draws in under the steps on the pin's clock */}
+            <StairLine className="pointer-events-none absolute inset-0 h-full w-full" />
 
           {/* Persistent header — stays on screen the whole pin, so the section
               never goes empty between the intro and the first step. */}
@@ -314,8 +355,9 @@ export function Services() {
               step. */}
           <div
             aria-hidden
-            // floor the offset so the numeral clears the fixed header on short
-            // viewports, where 8% of the stage lands behind it
+            data-numeral-box
+            // top is set by fit(), which has to divide the 84px floor by the
+            // stage scale to keep the numeral clear of the fixed nav on screen
             className="pointer-events-none absolute right-[3%] top-[max(84px,8%)]"
           >
             {STEPS.map((s, i) => (
@@ -362,6 +404,7 @@ export function Services() {
               </div>
             </article>
           ))}
+          </div>
         </div>
       </div>
 
