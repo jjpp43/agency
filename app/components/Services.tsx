@@ -133,15 +133,20 @@ export function Services() {
           };
           layout();
 
-          // Desktop photo slot: one frame in the empty lower-left, crossfading
-          // through the three shots as the staircase accumulates.
+          // Two stacks that swap with the steps: the photo slot in the empty
+          // lower-left, and the outsized step numeral in the empty top-right.
           const shots = gsap.utils.toArray<HTMLElement>("[data-shot]", host);
+          const numerals = gsap.utils.toArray<HTMLElement>(
+            "[data-numeral]",
+            host,
+          );
 
           if (!motion) {
-            // Static: hold the first shot, since every step is shown at rest.
-            if (shots.length) {
-              gsap.set(shots, { autoAlpha: 0 });
-              gsap.set(shots[0], { autoAlpha: 1 });
+            // Static: hold the first of each, since every step shows at rest.
+            for (const els of [shots, numerals]) {
+              if (!els.length) continue;
+              gsap.set(els, { autoAlpha: 0 });
+              gsap.set(els[0], { autoAlpha: 1 });
             }
             const ro = new ResizeObserver(layout);
             ro.observe(host);
@@ -168,6 +173,23 @@ export function Services() {
                 onRefresh: layout,
               },
             });
+
+            // Bring stack item i forward and retire the one before it.
+            const swapTo = (els: HTMLElement[], i: number, at: number) => {
+              if (!els[i]) return;
+              tl.to(
+                els[i],
+                { autoAlpha: 1, duration: 0.5, ease: "power2.out" },
+                at,
+              );
+              if (els[i - 1]) {
+                tl.to(
+                  els[i - 1],
+                  { autoAlpha: 0, duration: 0.5, ease: "power2.out" },
+                  at,
+                );
+              }
+            };
 
             steps.forEach((el, i) => {
               const body = el.querySelector("[data-body]");
@@ -204,21 +226,9 @@ export function Services() {
                   at,
                 );
 
-              // and the photo slot crossfades to this step's shot
-              if (shots[i]) {
-                tl.to(
-                  shots[i],
-                  { autoAlpha: 1, duration: 0.5, ease: "power2.out" },
-                  at + 0.15,
-                );
-                if (shots[i - 1]) {
-                  tl.to(
-                    shots[i - 1],
-                    { autoAlpha: 0, duration: 0.5, ease: "power2.out" },
-                    at + 0.15,
-                  );
-                }
-              }
+              // the numeral turns over with the step, the photo just behind it
+              swapTo(numerals, i, at);
+              swapTo(shots, i, at + 0.15);
             });
 
             tl.to({}, { duration: 0.6 }); // tail — hold the finished staircase
@@ -266,6 +276,31 @@ export function Services() {
             <h2 className="mt-4 max-w-[18ch] text-balance font-display text-[clamp(22px,2.5vw,34px)] font-semibold leading-[1.05] tracking-[-0.02em] text-ink">
               Three moves, one small team.
             </h2>
+          </div>
+
+          {/* Step numeral — fills the top-right, the one region the staircase
+              never reaches, and balances the header diagonally: small solid
+              type up left, outsized hollow type up right. Turns over with each
+              step. */}
+          <div
+            aria-hidden
+            // floor the offset so the numeral clears the fixed header on short
+            // viewports, where 8% of the stage lands behind it
+            className="pointer-events-none absolute right-[3%] top-[max(84px,8%)]"
+          >
+            {STEPS.map((s, i) => (
+              <span
+                key={s.num}
+                data-numeral
+                className="text-outline absolute right-0 top-0 font-display font-semibold leading-[0.78] tracking-[-0.05em]"
+                style={{
+                  fontSize: "clamp(120px, 16vw, 250px)",
+                  opacity: i === 0 ? 1 : 0,
+                }}
+              >
+                {s.num}
+              </span>
+            ))}
           </div>
 
           {/* Photo slot — sits in the space the staircase leaves empty as it
