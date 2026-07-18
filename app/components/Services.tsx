@@ -339,7 +339,7 @@ export function Services() {
               {/* the step's own photo, travelling with it */}
               <ServicePhoto
                 shot={SHOTS[i]}
-                className="aspect-[4/5] w-[27%] shrink-0"
+                className="aspect-square w-[27%] shrink-0"
               />
               <div className="min-w-0 flex-1">
                 <div className="flex items-baseline gap-4">
@@ -391,7 +391,7 @@ export function Services() {
                 </p>
                 <ServicePhoto
                   shot={SHOTS[i]}
-                  className="mt-5 aspect-[4/5] w-[62%] max-w-[260px]"
+                  className="mt-5 aspect-square w-[62%] max-w-[260px]"
                 />
               </Reveal>
             ))}
