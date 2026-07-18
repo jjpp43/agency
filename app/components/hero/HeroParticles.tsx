@@ -5,6 +5,7 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { MeshSurfaceSampler } from "three/examples/jsm/math/MeshSurfaceSampler.js";
 import * as BufferGeometryUtils from "three/examples/jsm/utils/BufferGeometryUtils.js";
+import { LAPTOP, buildGlobe, loopProgress } from "./shape";
 
 /**
  * Hero point-cloud: ~7k dots that assemble into a laptop, scatter, then
@@ -17,7 +18,6 @@ import * as BufferGeometryUtils from "three/examples/jsm/utils/BufferGeometryUti
  */
 
 const COUNT = 7000;
-const RADIUS = 2.1;
 
 const INK = new THREE.Color("#141310");
 const ELECTRIC = new THREE.Color("#2b2bf5");
@@ -34,23 +34,16 @@ function buildParticleData(): ParticleData {
   const rand = new Float32Array(COUNT * 3);
 
   // Globe — fibonacci sphere for an even distribution.
-  const golden = Math.PI * (3 - Math.sqrt(5));
-  for (let i = 0; i < COUNT; i++) {
-    const y = 1 - (i / (COUNT - 1)) * 2;
-    const r = Math.sqrt(Math.max(0, 1 - y * y));
-    const theta = golden * i;
-    globe[i * 3] = Math.cos(theta) * r * RADIUS;
-    globe[i * 3 + 1] = y * RADIUS;
-    globe[i * 3 + 2] = Math.sin(theta) * r * RADIUS;
-  }
+  buildGlobe(COUNT, globe);
 
   // Laptop — a base slab + a screen slab tilted back, merged and then
-  // surface-sampled so the dots sit on the shell of the shape.
-  const baseGeo = new THREE.BoxGeometry(3, 0.16, 2.1);
-  baseGeo.translate(0, -0.6, 0.25);
-  const screenGeo = new THREE.BoxGeometry(3, 2, 0.12);
-  screenGeo.rotateX(-0.32);
-  screenGeo.translate(0, 0.42, -0.72);
+  // surface-sampled so the dots sit on the shell of the shape. Dimensions come
+  // from ./shape so the 2D mobile renderer draws the same object.
+  const baseGeo = new THREE.BoxGeometry(...LAPTOP.base.size);
+  baseGeo.translate(...LAPTOP.base.pos);
+  const screenGeo = new THREE.BoxGeometry(...LAPTOP.screen.size);
+  screenGeo.rotateX(LAPTOP.screen.rotX);
+  screenGeo.translate(...LAPTOP.screen.pos);
   const merged = BufferGeometryUtils.mergeGeometries([baseGeo, screenGeo]);
   const sampler = new MeshSurfaceSampler(new THREE.Mesh(merged)).build();
   const p = new THREE.Vector3();
@@ -131,11 +124,6 @@ const fragmentShader = /* glsl */ `
   }
 `;
 
-// Morph loop timing (seconds): assemble -> hold -> disperse -> hold.
-const MORPH = 3.0;
-const HOLD = 1.5;
-const LOOP = MORPH * 2 + HOLD * 2;
-
 function Particles({ reduced }: { reduced: boolean }) {
   const pointsRef = useRef<THREE.Points>(null);
   const materialRef = useRef<THREE.ShaderMaterial>(null);
@@ -167,14 +155,7 @@ function Particles({ reduced }: { reduced: boolean }) {
     const t = state.clock.elapsedTime;
     mat.uniforms.uTime.value = t;
 
-    const phase = t % LOOP;
-    let p: number;
-    if (phase < MORPH) p = phase / MORPH; // laptop -> globe
-    else if (phase < MORPH + HOLD) p = 1; // hold globe
-    else if (phase < MORPH * 2 + HOLD)
-      p = 1 - (phase - MORPH - HOLD) / MORPH; // globe -> laptop
-    else p = 0; // hold laptop
-    mat.uniforms.uProgress.value = p;
+    mat.uniforms.uProgress.value = loopProgress(t);
 
     pts.rotation.y += delta * 0.14;
   });
@@ -230,17 +211,18 @@ export default function HeroParticles() {
 
   // Mount after first paint (client-only) so three never blocks the LCP
   // headline, and read the motion preference once we're in the browser.
+  //
+  // Only rendered on lg+ — Hero gates this at the call site, because the width
+  // check has to happen *before* next/dynamic fetches the chunk. Small screens
+  // get the 2D <HeroDots> instead.
   useEffect(() => {
-    setReduced(
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches,
-    );
+    setReduced(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
     if (!canRenderWebGL()) return;
     const id = window.requestAnimationFrame(() => setReady(true));
     return () => window.cancelAnimationFrame(id);
   }, []);
 
-  // No context, no dot cloud. The hero is the headline; this fills the empty
-  // half on lg+, so dropping it costs the layout nothing.
+  // No context, no dot cloud.
   if (!ready) return null;
 
   return (

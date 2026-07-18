@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -9,6 +9,7 @@ import { useGSAP } from "@gsap/react";
 import { BookingButton } from "./booking/BookingButton";
 import { GhostButton } from "./Buttons";
 import { SkewOnScroll, Marquee } from "./gsap/Kinetic";
+import { HeroDots } from "./hero/HeroDots";
 
 // Client-only + code-split: keeps three.js out of the initial bundle and off
 // the server so it never blocks the headline's first paint.
@@ -20,6 +21,19 @@ gsap.registerPlugin(ScrollTrigger, SplitText, useGSAP);
 
 export function Hero() {
   const ref = useRef<HTMLElement>(null);
+
+  // Gate the WebGL cloud on width *here*, not inside HeroParticles: rendering
+  // it at all is what makes next/dynamic fetch the chunk, so a CSS `hidden` (or
+  // an early return inside the component) still ships ~870KB of three to a
+  // phone that never shows it. Watched, so a resize past lg brings it in.
+  const [wide, setWide] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const sync = () => setWide(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
 
   useGSAP(
     () => {
@@ -97,16 +111,19 @@ export function Hero() {
       </div>
 
       {/* Giant statement */}
-      <div className="relative mx-auto w-full max-w-[1320px] flex-1 px-6">
+      {/* Below lg this is a flex column so the dot-cloud band can claim the
+          leftover height; on lg it stays a plain block, as it was. */}
+      <div className="relative mx-auto flex w-full max-w-[1320px] flex-1 flex-col px-6 lg:block">
         {/* Point-cloud fills the empty right half on large screens. Behind the
-            headline, non-interactive, hidden on small screens for perf/space. */}
+            headline, non-interactive. Small screens draw the same shape in 2D
+            below the headline instead — see <HeroDots /> further down. */}
         <div
           aria-hidden
           className="pointer-events-none absolute right-0 top-0 hidden h-full w-[46%] lg:block"
         >
-          <HeroParticles />
+          {wide && <HeroParticles />}
         </div>
-        <div className="relative flex h-full items-center">
+        <div className="relative flex flex-1 flex-col justify-center lg:h-full lg:flex-row lg:items-center lg:justify-start">
           <SkewOnScroll max={6}>
             <h1
               data-hero-title
@@ -120,6 +137,20 @@ export function Hero() {
               building<span className="text-electric">.</span>
             </h1>
           </SkewOnScroll>
+
+          {/* Below lg the cloud takes the empty band under the headline
+              instead of the right half. Display:none on lg+, so it leaves the
+              flex column entirely and the headline centres as before.
+              Height comes from flex-1 — it eats whatever slack the min-h-screen
+              hero has left rather than forcing its own, so it fills a tall
+              phone and collapses on a short one instead of pushing the CTAs
+              off the fold. */}
+          <div
+            aria-hidden
+            className="pointer-events-none relative mt-6 min-h-[80px] flex-1 lg:hidden"
+          >
+            <HeroDots className="absolute inset-0 h-full w-full" />
+          </div>
         </div>
       </div>
 
