@@ -19,6 +19,8 @@ export type Shot = {
   subject: string;
   /** Alt text once the real photo lands. */
   alt: string;
+  /** object-position, when centring the crop wastes the frame. */
+  position?: string;
 };
 
 export function ServicePhoto({
@@ -44,7 +46,11 @@ export function ServicePhoto({
   }, []);
 
   return (
-    <figure className={`relative overflow-hidden bg-bone ${className}`}>
+    // hairline stays under the photo too: these frames run high-key, and
+    // without an edge they dissolve into the bone page
+    <figure
+      className={`relative overflow-hidden border border-line bg-bone ${className}`}
+    >
       {!errored && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -57,9 +63,13 @@ export function ServicePhoto({
           className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-out"
           style={{
             opacity: loaded ? 1 : 0,
-            // Warm the image into the bone/ink palette so it sits with the
-            // page instead of on top of it. Tune once real photos land.
-            filter: "grayscale(0.35) contrast(1.04) sepia(0.12) brightness(1.02)",
+            objectPosition: shot.position ?? "center",
+            // Sit the photo in the bone/ink palette: sepia warms it off neutral
+            // grey, and the contrast/brightness pair stops a high-key frame
+            // washing out against the bone page. Tuned against a black-and-
+            // white source, so there's no grayscale() here — it would be a
+            // no-op on one and could flatten a colour photo later.
+            filter: "sepia(0.16) contrast(1.14) brightness(0.95) saturate(0.85)",
           }}
         />
       )}

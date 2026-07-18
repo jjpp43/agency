@@ -58,9 +58,12 @@ const STEPS: Step[] = [
 // placeholder on the next load — nothing here needs to change.
 const SHOTS: Shot[] = [
   {
-    src: "/services/listen.jpg",
+    src: "/service1.jpg",
     subject: "A call in progress · notes · whiteboard",
-    alt: "Working through a new project's goals",
+    alt: "Two people talking through a project over open laptops",
+    // the frame's empty upper wall isn't worth the space at this size — bias
+    // the crop down onto the laptops and the gesturing hand
+    position: "center 64%",
   },
   {
     src: "/services/build.jpg",
