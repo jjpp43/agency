@@ -115,21 +115,18 @@
   color: var(--color-electric);
 }
 
-/* Outlined (stroke-only) display text, stroked in `currentColor` so it works on
-   light and dark surfaces alike.
+/* Outlined (stroke-only) display text.
 
-   The stroke straddles the glyph outline, so against a transparent fill you see
-   both its inner and outer halves — and in tight counters (D, E, P, B) those
-   inner halves collide and the letter muddies. Painting the stroke first and
-   laying an opaque fill over it hides the inner half and leaves one clean
-   contour, which is why the width is doubled: half of it is covered.
-
-   That fill has to match the surface behind the text. It defaults to the page's
-   bone; set `--outline-fill` on any darker surface (see the hero marquee). */
+   Only worth using on simple shapes — the numerals in Services. text-stroke
+   traces every glyph contour, so on letters built from overlapping subpaths
+   (B, R, A, N, D, E, P) the internal seams get stroked too and the letter fills
+   with crossing lines. paint-order and a matched fill clean up the doubled
+   inner half but can't merge those contours, and no typeface avoids it —
+   Bricolage, Inter, JetBrains Mono and Helvetica all do the same thing. A true
+   merged outline needs an feMorphology filter or pre-unioned paths. */
 @utility text-outline {
-  -webkit-text-fill-color: var(--outline-fill, var(--color-bone));
-  -webkit-text-stroke: 3px currentColor;
-  paint-order: stroke;
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--color-ink);
 }
 
 /* Blueprint grid on paper */

@@ -58,9 +58,6 @@ export function SkewOnScroll({
  * signature as SkewOnScroll — the band answers the scroll instead of ignoring
  * it.
  *
- * Words alternate solid and outlined for typographic rhythm; the outline picks
- * up `currentColor`, so it inverts correctly on a dark band.
- *
  * Reduced motion parks the strip and never starts the ticker.
  */
 export function Marquee({
@@ -137,12 +134,7 @@ export function Marquee({
             aria-hidden
           >
             {items.map((it, i) => (
-              <span
-                key={i}
-                className={`flex items-center ${i % 2 ? "text-outline" : ""} ${
-                  itemClassName ?? ""
-                }`}
-              >
+              <span key={i} className={`flex items-center ${itemClassName ?? ""}`}>
                 {it}
                 <span className="mx-8 inline-block h-3 w-3 shrink-0 rotate-45 bg-electric" />
               </span>
