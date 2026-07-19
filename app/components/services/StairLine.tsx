@@ -89,7 +89,14 @@ export function measureSwitchback(
   );
 }
 
-/** Paint a drawn-length onto the path (dash trick) and park the mark at the tip. */
+/**
+ * Degrees of spin per pixel travelled. Tying the rotation to distance rather
+ * than to a clock is what makes it read as rolling: it turns only while the
+ * line is advancing, and stops dead when the scroll does.
+ */
+const ROLL = 1.6;
+
+/** Paint a drawn-length onto the path (dash trick) and roll the mark to the tip. */
 export function applyDraw(
   path: SVGPathElement,
   dot: SVGGElement,
@@ -100,8 +107,12 @@ export function applyDraw(
   path.style.strokeDasharray = `${m.total}`;
   path.style.strokeDashoffset = `${m.total - l}`;
   const p = path.getPointAtLength(l);
-  // a group, so it moves by transform rather than cx/cy
-  dot.setAttribute("transform", `translate(${p.x.toFixed(1)} ${p.y.toFixed(1)})`);
+  // a group, so it moves by transform rather than cx/cy; rotate after the
+  // translate so it spins in place at the tip
+  dot.setAttribute(
+    "transform",
+    `translate(${p.x.toFixed(1)} ${p.y.toFixed(1)}) rotate(${(l * ROLL).toFixed(1)})`,
+  );
   dot.style.opacity = "1";
 }
 
@@ -114,20 +125,18 @@ export function StairLine({ className = "" }: { className?: string }) {
         stroke="var(--color-line-strong)"
         strokeWidth="1.25"
       />
-      {/* The mark riding the drawn tip: an asterisk, drawn as three crossed
-          strokes rather than a text glyph so it stays line-work like the rest
-          of the section and keeps its weight at any size. Hidden until the
-          first measure places it, so it never flashes at 0,0. */}
-      <g
-        data-stair-dot
-        stroke="var(--color-electric)"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        style={{ opacity: 0 }}
-      >
-        <line x1="0" y1="-5" x2="0" y2="5" />
-        <line x1="-4.33" y1="-2.5" x2="4.33" y2="2.5" />
-        <line x1="-4.33" y1="2.5" x2="4.33" y2="-2.5" />
+      {/* The mark riding the drawn tip — the asterisk from public/asterisk.svg,
+          inlined so it can take the electric accent and be rotated (an <image>
+          would keep the file's own black fill). The path is authored around
+          (176, 256) in its own 512 space, so it's recentred on the origin and
+          scaled down before the group's translate/rotate is applied. Hidden
+          until the first measure places it, so it never flashes at 0,0. */}
+      <g data-stair-dot style={{ opacity: 0 }}>
+        <path
+          d="M285 221Q243 246 210 256 243 266 285 291L261 333Q215 305 193 286 200 317 200 368L152 368Q152 317 159 286 137 305 91 333L67 291Q109 266 142 256 109 246 67 221L91 179Q137 207 159 226 152 195 152 144L200 144Q200 195 193 226 215 207 261 179L285 221Z"
+          fill="var(--color-electric)"
+          transform="scale(0.062) translate(-176 -256)"
+        />
       </g>
     </svg>
   );
