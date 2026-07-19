@@ -89,10 +89,10 @@ export function measureSwitchback(
   );
 }
 
-/** Paint a drawn-length onto the path (dash trick) and park the dot at the tip. */
+/** Paint a drawn-length onto the path (dash trick) and park the mark at the tip. */
 export function applyDraw(
   path: SVGPathElement,
-  dot: SVGCircleElement,
+  dot: SVGGElement,
   m: StairMetrics,
   len: number,
 ) {
@@ -100,8 +100,8 @@ export function applyDraw(
   path.style.strokeDasharray = `${m.total}`;
   path.style.strokeDashoffset = `${m.total - l}`;
   const p = path.getPointAtLength(l);
-  dot.setAttribute("cx", p.x.toFixed(1));
-  dot.setAttribute("cy", p.y.toFixed(1));
+  // a group, so it moves by transform rather than cx/cy
+  dot.setAttribute("transform", `translate(${p.x.toFixed(1)} ${p.y.toFixed(1)})`);
   dot.style.opacity = "1";
 }
 
@@ -114,13 +114,21 @@ export function StairLine({ className = "" }: { className?: string }) {
         stroke="var(--color-line-strong)"
         strokeWidth="1.25"
       />
-      {/* hidden until the first measure places it, so it never flashes at 0,0 */}
-      <circle
+      {/* The mark riding the drawn tip: an asterisk, drawn as three crossed
+          strokes rather than a text glyph so it stays line-work like the rest
+          of the section and keeps its weight at any size. Hidden until the
+          first measure places it, so it never flashes at 0,0. */}
+      <g
         data-stair-dot
-        r="4"
-        fill="var(--color-electric)"
+        stroke="var(--color-electric)"
+        strokeWidth="1.5"
+        strokeLinecap="round"
         style={{ opacity: 0 }}
-      />
+      >
+        <line x1="0" y1="-5" x2="0" y2="5" />
+        <line x1="-4.33" y1="-2.5" x2="4.33" y2="2.5" />
+        <line x1="-4.33" y1="2.5" x2="4.33" y2="-2.5" />
+      </g>
     </svg>
   );
 }

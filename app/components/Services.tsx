@@ -127,7 +127,7 @@ export function Services() {
           const host = lg ? stageRef.current : mobRef.current;
           if (!host) return;
           const path = host.querySelector<SVGPathElement>("[data-stair-path]");
-          const dot = host.querySelector<SVGCircleElement>("[data-stair-dot]");
+          const dot = host.querySelector<SVGGElement>("[data-stair-dot]");
           const steps = lg
             ? gsap.utils.toArray<HTMLElement>("[data-step]", host)
             : Array.from(host.children).filter(
