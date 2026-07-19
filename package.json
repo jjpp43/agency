@@ -10,6 +10,7 @@
   "dependencies": {
     "@base-ui/react": "^1.6.0",
     "@gsap/react": "^2.1.2",
+    "@paper-design/shaders-react": "^0.0.77",
     "@polar-sh/nextjs": "^0.9.6",
     "@react-three/fiber": "^9.6.1",
     "class-variance-authority": "^0.7.1",
