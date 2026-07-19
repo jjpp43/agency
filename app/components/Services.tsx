@@ -344,7 +344,7 @@ export function Services() {
               never goes empty between the intro and the first step. */}
           <div className="absolute left-[4%] top-[9%] z-10">
             <Eyebrow index="01">Services</Eyebrow>
-            <h2 className="mt-4 max-w-[18ch] text-balance font-display text-[clamp(22px,2.5vw,34px)] font-semibold leading-[1.05] tracking-[-0.02em] text-ink">
+            <h2 className="mt-4 whitespace-nowrap font-display text-[clamp(22px,2.5vw,34px)] font-semibold leading-[1.05] tracking-[-0.02em] text-ink">
               Three moves, one small team.
             </h2>
           </div>
