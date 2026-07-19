@@ -9,8 +9,10 @@ gsap.registerPlugin(useGSAP);
 const WORD = "FOOTNOTE";
 
 /**
- * First-load reveal: an ink curtain with a 00→100 counter and the wordmark
- * building letter by letter, then two panels wipe apart to reveal the page.
+ * First-load reveal: an ink curtain with the wordmark as a small tracked label
+ * above an oversized 00→100 counter dead-center, a thin electric line beneath
+ * filling with the same progress. When it lands on 100 the block lifts out and
+ * the panels wipe apart to reveal the page.
  * Shows once per session; respects reduced motion.
  */
 export function Intro() {
@@ -40,9 +42,9 @@ export function Intro() {
       sessionStorage.setItem("fn-intro", "1");
       document.body.style.overflow = "hidden";
 
-      const counter = { v: 0 };
+      const prog = { v: 0 };
       const numEl = ref.current!.querySelector("[data-count]") as HTMLElement;
-      const letters = gsap.utils.toArray<HTMLElement>("[data-il]");
+      const barEl = ref.current!.querySelector("[data-bar]") as HTMLElement;
 
       const tl = gsap.timeline({
         onComplete: () => {
@@ -52,27 +54,37 @@ export function Intro() {
         },
       });
 
-      tl.set(letters, { yPercent: 110 })
-        .to(letters, {
-          yPercent: 0,
-          duration: 0.7,
-          ease: "power4.out",
-          stagger: 0.05,
-        })
+      // 1. wordmark label + counter rise in together
+      tl.set("[data-word]", { yPercent: 110 })
+        .set("[data-num]", { yPercent: 40, opacity: 0 })
+        .to("[data-word]", { yPercent: 0, duration: 0.6, ease: "power4.out" })
         .to(
-          counter,
+          "[data-num]",
+          { yPercent: 0, opacity: 1, duration: 0.6, ease: "power4.out" },
+          "<0.05",
+        )
+        // 2. the count runs; the electric line tracks the same value
+        .to(
+          prog,
           {
             v: 100,
-            duration: 1.6,
+            duration: 1.7,
             ease: "power2.inOut",
             onUpdate: () => {
-              numEl.textContent = String(Math.round(counter.v)).padStart(3, "0");
+              const v = prog.v;
+              numEl.textContent = String(Math.round(v)).padStart(3, "0");
+              barEl.style.transform = `scaleX(${v / 100})`;
             },
           },
-          0,
+          ">-0.15",
         )
-        .to(letters, { yPercent: -110, duration: 0.5, ease: "power3.in", stagger: 0.03 }, ">-0.1")
-        .to("[data-count-wrap]", { opacity: 0, duration: 0.3 }, "<")
+        // 3. the whole block lifts out
+        .to(
+          "[data-block]",
+          { yPercent: -14, opacity: 0, duration: 0.5, ease: "power3.in" },
+          ">0.2",
+        )
+        // 4. panels wipe apart to reveal the page
         .to(
           "[data-panel]",
           {
@@ -97,26 +109,38 @@ export function Intro() {
           <div key={i} data-panel className="h-full flex-1 bg-ink" />
         ))}
       </div>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
+
+      <div
+        data-block
+        className="absolute inset-0 flex flex-col items-center justify-center"
+      >
+        {/* Small wordmark label */}
         <div className="overflow-hidden">
-          <div className="flex">
-            {WORD.split("").map((c, i) => (
-              <span
-                key={i}
-                data-il
-                className="inline-block font-display text-[13vw] font-semibold leading-none tracking-tight text-paper sm:text-[8vw]"
-              >
-                {c}
-              </span>
-            ))}
+          <div
+            data-word
+            className="font-mono text-[12px] uppercase tracking-[0.42em] text-paper/70 sm:text-[13px]"
+          >
+            {WORD}
           </div>
         </div>
-      </div>
-      <div
-        data-count-wrap
-        className="absolute bottom-8 right-8 font-mono text-[13px] text-paper/70"
-      >
-        <span data-count>000</span> / 100
+
+        {/* Oversized counter */}
+        <div
+          data-num
+          className="mt-4 font-display font-semibold leading-[0.82] tracking-[-0.03em] text-paper tabular-nums"
+          style={{ fontSize: "clamp(96px, 22vw, 300px)" }}
+        >
+          <span data-count>000</span>
+        </div>
+
+        {/* Electric progress line beneath */}
+        <div className="mt-6 h-[2px] w-[min(60vw,320px)] overflow-hidden bg-paper/15">
+          <div
+            data-bar
+            className="h-full w-full origin-left bg-electric"
+            style={{ transform: "scaleX(0)" }}
+          />
+        </div>
       </div>
     </div>
   );

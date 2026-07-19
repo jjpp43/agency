@@ -36,8 +36,7 @@ const STEPS: Step[] = [
     word: "Build",
     body: (
       <>
-        Then we make it — brand, design, and development, end to end, one small
-        team.
+        Then we make it. Brand, design, and development, end to end.
       </>
     ),
   },
@@ -46,8 +45,9 @@ const STEPS: Step[] = [
     word: "Grow",
     body: (
       <>
-        And we get you found: tuned for search engines and the{" "}
-        <span className="text-electric">AI answer engines</span> people now ask{" "}
+        And we help people find you, so you&apos;ll show up in search engines
+        and the <span className="text-electric">AI answer engines</span>{" "}
+        everyone&apos;s asking these days{" "}
         <span className="font-mono">(SEO&nbsp;&amp;&nbsp;AEO)</span>.
       </>
     ),
@@ -345,7 +345,7 @@ export function Services() {
           <div className="absolute left-[4%] top-[9%] z-10">
             <Eyebrow index="01">Services</Eyebrow>
             <h2 className="mt-4 whitespace-nowrap font-display text-[clamp(22px,2.5vw,34px)] font-semibold leading-[1.05] tracking-[-0.02em] text-ink">
-              Three moves, one small team.
+              How your site gets made.
             </h2>
           </div>
 
@@ -413,7 +413,7 @@ export function Services() {
         <div className="mx-auto max-w-[1320px] px-6 pb-24 pt-24">
           <Eyebrow index="01">Services</Eyebrow>
           <h2 className="mt-6 max-w-[16ch] text-balance font-display text-[40px] font-semibold leading-[0.98] tracking-[-0.03em] text-ink sm:text-[56px]">
-            Three moves, one small team.
+            How your site gets made.
           </h2>
 
           <div ref={mobRef} className="relative mt-14 flex flex-col gap-14">
