@@ -171,7 +171,13 @@ export function Hero() {
         </div>
       </div>
 
-      <div data-cursor-dark>
+      {/* --outline-fill tells text-outline what sits behind the letters, so the
+          stroke's inner half can be covered and the outline stays one clean
+          contour. Inherits down to the marquee's outlined words. */}
+      <div
+        data-cursor-dark
+        style={{ "--outline-fill": "var(--color-ink)" } as React.CSSProperties}
+      >
         <Marquee
           className="relative border-y border-ink bg-ink py-4 text-paper"
           items={["Design", "Development", "Motion", "Brand", "Strategy"]}

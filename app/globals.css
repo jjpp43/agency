@@ -115,13 +115,21 @@
   color: var(--color-electric);
 }
 
-/* Outlined (stroke-only) display text. Strokes in `currentColor`, so it works
-   on dark surfaces too — set a text colour alongside it. Hides the fill with
-   text-fill-color rather than `color: transparent`, which would make
-   currentColor transparent and take the stroke with it. */
+/* Outlined (stroke-only) display text, stroked in `currentColor` so it works on
+   light and dark surfaces alike.
+
+   The stroke straddles the glyph outline, so against a transparent fill you see
+   both its inner and outer halves — and in tight counters (D, E, P, B) those
+   inner halves collide and the letter muddies. Painting the stroke first and
+   laying an opaque fill over it hides the inner half and leaves one clean
+   contour, which is why the width is doubled: half of it is covered.
+
+   That fill has to match the surface behind the text. It defaults to the page's
+   bone; set `--outline-fill` on any darker surface (see the hero marquee). */
 @utility text-outline {
-  -webkit-text-fill-color: transparent;
-  -webkit-text-stroke: 1.5px currentColor;
+  -webkit-text-fill-color: var(--outline-fill, var(--color-bone));
+  -webkit-text-stroke: 3px currentColor;
+  paint-order: stroke;
 }
 
 /* Blueprint grid on paper */
